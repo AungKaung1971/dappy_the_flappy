@@ -1,0 +1,50 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.pkl
+*.pt
+*.pth
+
+# Virtual environments
+venv/
+env/
+.venv/
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# --- PyTorch ---
+checkpoints/
+runs/
+*.pt
+
+# --- Pygame/Video Outputs ---
+videos/
+*.mp4
+*.avi
+*.mov
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- Build / Packaging ---
+build/
+dist/
+*.egg-info/
+
+# --- Cache ---
+.cache/
