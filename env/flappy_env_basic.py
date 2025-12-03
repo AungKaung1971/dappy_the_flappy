@@ -50,12 +50,28 @@ class Pipe:
         pygame.draw.rect(screen, (0, 255, 0), bottom_rect)
 
 
+def check_collision(bird, pipe):
+    if bird.x + bird.radius > pipe.x and bird.x - bird.radius < pipe.x + pipe.width:
+        top_pipe_bottom = pipe.gap_y - pipe.gap_height // 2
+        bottom_pipe_top = pipe.gap_y + pipe.gap_height // 2
+
+        if bird.y - bird.radius < top_pipe_bottom:
+            return True
+        if bird.y + bird.radius > bottom_pipe_top:
+            return True
+
+    return False
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    font = pygame.font.SysFont(None, 32)
     clock = pygame.time.Clock()
 
     bird = Bird(50, HEIGHT // 2)
+
+    score = 0
 
     pipes = []
     pipe_timer = 0
@@ -79,12 +95,30 @@ def main():
         for pipe in pipes:
             pipe.update()
 
+            if pipe.x + pipe.width < bird.x and not hasattr(pipe, "scored"):
+                score += 1
+                pipe.scored = True
+                print("Score:", score)
+
+            if check_collision(bird, pipe):
+                print("GAME OVER")
+                pygame.time.wait(800)
+                return main()
+
+        if bird.y > HEIGHT or bird.y < 0:
+            print("GAME OVER")
+            pygame.time.wait(800)
+            return main()
+
         screen.fill((0, 150, 255))
 
         for pipe in pipes:
             pipe.draw(screen)
 
         bird.icon(screen)
+
+        score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+        screen.blit(score_text, (10, 10))
 
         pygame.display.flip()
 
