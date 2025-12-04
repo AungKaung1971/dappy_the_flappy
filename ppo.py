@@ -36,7 +36,7 @@ class PPOAgent:
 
         self.model.eval()
         with torch.no_grad():
-            logits, value = self.mode(obs)
+            logits, value = self.model(obs)
             dist = Categorical(logits=logits)
             action = dist.sample()
             logprob = dist.log_prob(action)

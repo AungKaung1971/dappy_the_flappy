@@ -3,9 +3,13 @@ import numpy as np
 
 
 def preprocess_frame(frame):
-    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    resized = cv2.resize(gray, (84, 84), interpolation=cv2.INTER_AREA)
-    normalized = resized.astype(np.float32) / 255.0
+    if len(frame.shape) == 2:
+        gray = frame
+    else:
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+
+    gray = cv2.resize(gray, (84, 84), interpolation=cv2.INTER_AREA)
+    normalized = gray.astype(np.float32) / 255.0
     return normalized
 
 

@@ -5,6 +5,8 @@ import random
 from .flappy_env_basic import Bird, Pipe, check_collision, WIDTH, HEIGHT, FPS
 from preprocess import preprocess_frame, init_frame_stack, update_frame_stack
 
+print("ENV FILE LOADED")
+
 
 class FlappyBirdEnv:
     def __init__(self):
@@ -30,6 +32,8 @@ class FlappyBirdEnv:
         self.pipe_timer = 0
         self.score = 0
         self.done = False
+
+        self.episode_reward = 0
 
         self._render_for_capture()
 
@@ -70,6 +74,8 @@ class FlappyBirdEnv:
             self.done = True
             reward = -50
 
+        self.episode_reward += reward
+
         self.pipe_timer += 1
         if self.pipe_timer >= self.PIPE_INTERVAL:
             gap_y = random.randint(100, HEIGHT - 100)
@@ -78,7 +84,10 @@ class FlappyBirdEnv:
 
         obs = self._get_obs()
 
-        return obs, reward, self.done, {"score": self.score}
+        return obs, reward, self.done, {
+            "score": self.score,
+            "episode_reward": self.episode_reward
+        }
 
     def _get_obs(self):
         """Return RGB frame (H,W,3)."""
