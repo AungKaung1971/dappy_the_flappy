@@ -12,7 +12,7 @@ from buffer import RolloutBuffer
 
 def train():
     # Hyperparameters
-    TOTAL_STEPS = 300_000
+    TOTAL_STEPS = 1_000_000
     SAVE_INTERVAL = 50_000
     ROLLOUT_STEPS = 2048
 
