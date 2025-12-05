@@ -64,17 +64,17 @@ class FlappyBirdEnv:
             pipe.update()
 
             if pipe.x + pipe.width < self.bird.x and not hasattr(pipe, "scored"):
-                self.score += 1
+                self.score += 0.1
                 pipe.scored = True
-                reward += 10  # pipe reward
+                reward += 1  # pipe reward
 
             if check_collision(self.bird, pipe):
                 self.done = True
-                reward = -50
+                reward = -1
 
         if self.bird.y < 0 or self.bird.y > HEIGHT:
             self.done = True
-            reward = -50
+            reward = -1
 
         self.episode_reward += reward
 
