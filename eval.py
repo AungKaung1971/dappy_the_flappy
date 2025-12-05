@@ -1,45 +1,38 @@
 import cv2
 import torch
+import argparse
 import numpy as np
 
 from env.flappy_env import FlappyBirdEnv
 from model import CNNPolicy
+from preprocess import preprocess_frame, init_frame_stack, update_frame_stack
 
 
 def evaluate(checkpoint_path, output_video="evaluation.mp4", max_steps=5000):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Load model
+    # -----------------------------------
+    # LOAD MODEL
+    # -----------------------------------
     model = CNNPolicy(action_dim=2).to(device)
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
     model.eval()
 
-    # ---------------------------
-    # INIT ENV (returns (4,84,84))
-    # ---------------------------
+    # -----------------------------------
+    # INIT ENV + INITIAL FRAME STACK
+    # -----------------------------------
     env = FlappyBirdEnv()
-    state = env.reset().astype(np.float32)
+    env.reset()
 
-    # -----------------------------------------
-    # DEBUG: Check what the model outputs at start
-    # -----------------------------------------
-    print("DEBUG: STATE SHAPE:", state.shape)
-
-    inp = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(device)
-
-    with torch.no_grad():
-        logits, value = model(inp)
-
-    print("DEBUG: LOGITS:", logits.cpu().numpy())
-    print("DEBUG: VALUE HEAD:", value.cpu().numpy())
-    print("DEBUG: ACTION SELECTED:", torch.argmax(logits, dim=-1).item())
-    print("-----------------------------------------")
-
-    # Get raw RGB frame for video size
     raw = env._get_frame()
-    h, w, _ = raw.shape
+    processed = preprocess_frame(raw)
+    state = init_frame_stack(processed).astype(np.float32)
 
+    # -----------------------------------
+    # INIT VIDEO WRITER
+    # -----------------------------------
+    h, w, _ = raw.shape
     out = cv2.VideoWriter(
         output_video,
         cv2.VideoWriter_fourcc(*"mp4v"),
@@ -49,33 +42,57 @@ def evaluate(checkpoint_path, output_video="evaluation.mp4", max_steps=5000):
 
     done = False
     steps = 0
+    info = {}
 
+    # -----------------------------------
+    # MAIN LOOP
+    # -----------------------------------
     while not done and steps < max_steps:
 
         # Convert to tensor
         inp = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(device)
 
-        # Deterministic action (no sampling!)
         with torch.no_grad():
             logits, _ = model(inp)
-            action = torch.argmax(logits, dim=-1).item()
 
-        # Step the environment – THIS returns the NEXT stacked state
-        next_state, reward, done, info = env.step(action)
+            # 🔥 PPO STOCHASTIC SAMPLING — MATCHES TRAINING
+            probs = torch.softmax(logits, dim=-1)
+            action = torch.multinomial(probs, 1).item()
 
-        # Update state EXACTLY like training
-        state = next_state.astype(np.float32)
+        # Step environment
+        _, _, done, info = env.step(action)
 
-        # Write raw frame for video
+        # New frame
         raw = env._get_frame()
+        processed = preprocess_frame(raw)
+        state = update_frame_stack(state, processed).astype(np.float32)
+
+        # Write to video
         out.write(cv2.cvtColor(raw, cv2.COLOR_RGB2BGR))
 
         steps += 1
 
     out.release()
-    print("Video saved:", output_video)
-    print("Final score:", info.get("score", "N/A"))
+    print(f"\n🎥 Video saved as: {output_video}")
+    print(f"🏆 Final score: {info.get('score', 'N/A')}")
 
 
+# -----------------------------------
+# CLI SUPPORT
+# -----------------------------------
 if __name__ == "__main__":
-    evaluate("checkpoints/ckpt_251904.pt")
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--checkpoint",
+                        type=str,
+                        required=True,
+                        help="Path to checkpoint .pt file")
+
+    parser.add_argument("--output",
+                        type=str,
+                        default="evaluation.mp4",
+                        help="Output MP4 file name")
+
+    args = parser.parse_args()
+
+    evaluate(args.checkpoint, args.output)
