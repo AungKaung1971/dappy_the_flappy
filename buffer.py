@@ -70,4 +70,12 @@ class RolloutBuffer:
         return obs, actions, old_logprobs, returns, advantages, values
 
     def reset(self):
+        self.observations[:] = 0
+        self.actions[:] = 0
+        self.logprobs[:] = 0
+        self.rewards[:] = 0
+        self.dones[:] = 0
+        self.values[:] = 0
+        self.advantages[:] = 0
+        self.returns[:] = 0
         self.ptr = 0

@@ -26,9 +26,7 @@ def train():
 
     print("obs shape:", obs.shape)
 
-    frame = preprocess_frame(obs[-1])
-
-    state = np.repeat(frame[None, :, :], 4, axis=0)
+    state = obs.astype(np.float32)
 
     buffer = RolloutBuffer(
         buffer_size=ROLLOUT_STEPS,
@@ -51,10 +49,7 @@ def train():
             action, logprob, value = ppo.act(state.astype(np.float32))
 
             next_obs, reward, done, info = env.step(action)
-            next_frame = preprocess_frame(next_obs[-1])
-            next_state = np.concatenate(
-                (state[1:], next_frame[None, :, :]), axis=0
-            )
+            next_state = next_obs.astype(np.float32)
 
             idx = buffer.ptr
             buffer.observations[idx] = state
@@ -73,8 +68,7 @@ def train():
                 episode_rewards.append(info.get("episode_reward", 0))
 
                 obs = env.reset()
-                frame = preprocess_frame(obs[-1])
-                state = np.repeat(frame[None, :, :], 4, axis=0)
+                state = obs.astype(np.float32)
 
             if total_steps >= TOTAL_STEPS:
                 break
@@ -88,8 +82,6 @@ def train():
             ).unsqueeze(0).to(device)
             _, last_value = model(state_t)
             last_value = float(last_value.squeeze(-1).item())
-
-        buffer.compute_returns_and_advantages(last_value)
 
         ppo.update(buffer, last_value)
 

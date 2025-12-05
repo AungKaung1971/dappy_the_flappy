@@ -13,7 +13,6 @@ class FlappyBirdEnv:
         pygame.init()
 
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
         self.clock = pygame.time.Clock()
 
         self.bird = None
@@ -23,6 +22,9 @@ class FlappyBirdEnv:
 
         self.score = 0
         self.done = False
+
+        self.episode_reward = 0
+        self.state = None
 
     def reset(self):
         """Reset the environment and return the first observation."""
@@ -82,7 +84,17 @@ class FlappyBirdEnv:
             self.pipes.append(Pipe(WIDTH, gap_y))
             self.pipe_timer = 0
 
-        obs = self._get_obs()
+        # --- NEW PART: update frame stack and return it ---
+        self._render_for_capture()
+        frame = self._get_frame()
+        processed = preprocess_frame(frame)
+        if self.state is None:
+            # safety, but normally state is set in reset()
+            self.state = init_frame_stack(processed)
+        else:
+            self.state = update_frame_stack(self.state, processed)
+
+        obs = self.state
 
         return obs, reward, self.done, {
             "score": self.score,
