@@ -37,6 +37,8 @@ class Pipe:
         self.speed = speed
         self.width = 50
 
+        self.scored = False
+
     def update(self):
         self.x -= self.speed
 
@@ -48,6 +50,8 @@ class Pipe:
 
         pygame.draw.rect(screen, (0, 255, 0), top_rect)
         pygame.draw.rect(screen, (0, 255, 0), bottom_rect)
+
+    
 
 
 def check_collision(bird, pipe):
@@ -75,7 +79,7 @@ def main():
 
     pipes = []
     pipe_timer = 0
-    PIPE_INTERVAL = 90
+    PIPE_INTERVAL = 45
 
     running = True
     while running:

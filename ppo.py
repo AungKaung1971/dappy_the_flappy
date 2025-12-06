@@ -12,9 +12,9 @@ class PPOAgent:
                  lr: float = 2.5e-4,
                  gamma: float = 0.99,
                  lam: float = 0.95,
-                 clip_range: float = 0.1,
+                 clip_range: float = 0.2,
                  value_coef: float = 0.5,
-                 entropy_coef: float = 0.01,
+                 entropy_coef: float = 0.03,
                  n_epochs: int = 4,
                  batch_size: int = 64):
 
